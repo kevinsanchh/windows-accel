@@ -1,0 +1,83 @@
+name: Build
+on:
+  push:
+    branches:
+      - main
+    tags:
+      - v*
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: macos-26
+    env:
+      APPLE_ID: ${{ secrets.APPLE_ID }}
+      CODE_SIGN_IDENTITY: ${{ secrets.CODE_SIGN_IDENTITY }}
+      DEVELOPMENT_TEAM: ${{ secrets.DEVELOPMENT_TEAM }}
+    steps:
+      - name: Install dependencies
+        run: |
+          brew update
+          brew upgrade swiftformat
+          brew install swiftlint
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      - name: Install the Apple certificate
+        env:
+          BUILD_CERTIFICATE_BASE64: ${{ secrets.BUILD_CERTIFICATE_BASE64 }}
+          KEYCHAIN_PASSWORD: ${{ secrets.KEYCHAIN_PASSWORD }}
+          P12_PASSWORD: ${{ secrets.P12_PASSWORD }}
+        if: github.event_name != 'pull_request' && env.BUILD_CERTIFICATE_BASE64 != null
+        run: |
+          # create variables
+          CERTIFICATE_PATH=$RUNNER_TEMP/build_certificate.p12
+          KEYCHAIN_PATH=$RUNNER_TEMP/app-signing.keychain-db
+
+          # import certificate from secrets
+          echo -n "$BUILD_CERTIFICATE_BASE64" | base64 --decode --output $CERTIFICATE_PATH
+
+          # create temporary keychain
+          security create-keychain -p "$KEYCHAIN_PASSWORD" $KEYCHAIN_PATH
+          security set-keychain-settings -lut 21600 $KEYCHAIN_PATH
+          security unlock-keychain -p "$KEYCHAIN_PASSWORD" $KEYCHAIN_PATH
+
+          # import certificate to keychain
+          security import $CERTIFICATE_PATH -P "$P12_PASSWORD" -A -t cert -f pkcs12 -k $KEYCHAIN_PATH
+          security list-keychain -d user -s $KEYCHAIN_PATH
+
+          # Configure code signing
+          make configure-release
+      - name: Build pull request
+        if: github.event_name == 'pull_request'
+        run: make configure clean lint test XCODEBUILD_ARGS="CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO CODE_SIGN_IDENTITY= DEVELOPMENT_TEAM="
+      - name: Build
+        if: github.event_name != 'pull_request'
+        run: make
+      - name: Prepublish
+        if: startsWith(github.ref, 'refs/tags/')
+        env:
+          NOTARIZATION_PASSWORD: ${{ secrets.NOTARIZATION_PASSWORD }}
+        run: make prepublish
+      - name: Prepare dSYM archive
+        if: startsWith(github.ref, 'refs/tags/')
+        run: cd build/LinearMouse.xcarchive/dSYMs && zip -r "$GITHUB_WORKSPACE/build/LinearMouse.dSYM.zip" LinearMouse.app.dSYM
+      - name: Upload dmg
+        if: github.event_name != 'pull_request'
+        uses: actions/upload-artifact@v4
+        with:
+          name: LinearMouse.dmg
+          path: build/LinearMouse.dmg
+          retention-days: 7
+      - name: Release
+        uses: softprops/action-gh-release@v2
+        if: startsWith(github.ref, 'refs/tags/')
+        with:
+          draft: true
+          prerelease: ${{ contains(github.ref, '-') }}
+          files: |
+            build/LinearMouse.dmg
+            build/LinearMouse.dSYM.zip
+          fail_on_unmatched_files: true
+          generate_release_notes: true

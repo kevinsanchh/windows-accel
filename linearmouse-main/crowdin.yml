@@ -1,0 +1,7 @@
+pull_request_title: Update translations
+commit_message: Update translations (%language%)
+append_commit_message: 
+files:
+  - source: /LinearMouse/Localizable.xcstrings
+    translation: /LinearMouse/Localizable.xcstrings
+    multilingual: 1
