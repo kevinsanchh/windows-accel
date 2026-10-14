@@ -270,4 +270,39 @@ final class PointerSchemeApplicationTests: XCTestCase {
         Application().apply(.init(), to: otherTarget)
         XCTAssertEqual(otherTarget.actions, initialActions)
     }
+    func testCustomBallisticsOverridesNativeValuesAndRestoresThemWhenDisabled() {
+        for modern in [true, false] {
+            let target = Target()
+            target.supportsLinearPointerScaling = modern
+            let application = Application()
+            var pointer = Scheme.Pointer()
+            pointer.speed = .value(0.5)
+            pointer.acceleration = .value(2)
+            pointer.customAcceleration = .init(enabled: true)
+            XCTAssertTrue(application.apply(pointer, to: target))
+            XCTAssertEqual(target.actions, modern ? ["linear:true", "acceleration:1.0"] : ["acceleration:-1.0"])
+            target.actions.removeAll()
+            pointer.customAcceleration?.sensitivity = 15
+            XCTAssertTrue(application.apply(pointer, to: target))
+            XCTAssertTrue(target.actions.isEmpty)
+            pointer.customAcceleration?.enabled = false
+            XCTAssertTrue(application.apply(pointer, to: target))
+            XCTAssertEqual(target.actions, modern ? ["linear:false", "speed:0.5", "acceleration:2.0"] : ["speed:0.5", "acceleration:2.0"])
+        }
+    }
+
+    func testFailedCustomBaselinePreventsTransformingAndCanBeRetried() {
+        let target = Target()
+        target.failingAction = "acceleration:1.0"
+        let state = PointerSchemeApplicationState()
+        let scheme = Scheme(pointer: .init(customAcceleration: .init(enabled: true)))
+        XCTAssertFalse(state.apply(scheme, to: target))
+        XCTAssertFalse(state.isCustomAccelerationReady)
+        target.failingAction = nil
+        XCTAssertTrue(state.apply(scheme, to: target))
+        XCTAssertTrue(state.isCustomAccelerationReady)
+        state.invalidate()
+        XCTAssertFalse(state.isCustomAccelerationReady)
+    }
+
 }

@@ -95,4 +95,22 @@ final class ConfigurationDiffTests: XCTestCase {
         XCTAssertTrue(conditional.affectsEventTransformers)
         XCTAssertTrue(conditional.affectsFocusFollowsMouse)
     }
+    func testCustomBallisticsInvalidatesRoutesForTogglesValuesAndRemoval() {
+        var enabled = Scheme(pointer: .init(customAcceleration: .init(enabled: true)))
+        XCTAssertTrue(diff(Scheme(), enabled).affectsEventTransformers)
+        var custom = enabled
+        custom.pointer.customAcceleration?.useWindowsAcceleration = false
+        XCTAssertTrue(diff(enabled, custom).affectsEventTransformers)
+        enabled = custom
+        custom.pointer.customAcceleration?.sensitivity = 15
+        XCTAssertTrue(diff(enabled, custom).affectsEventTransformers)
+        enabled = custom
+        custom.pointer.customAcceleration?.displayDPI = 144
+        XCTAssertTrue(diff(enabled, custom).affectsEventTransformers)
+        enabled = custom
+        custom.pointer.customAcceleration?.enabled = false
+        XCTAssertTrue(diff(enabled, custom).affectsEventTransformers)
+        XCTAssertTrue(diff(custom, Scheme()).affectsEventTransformers)
+    }
+
 }

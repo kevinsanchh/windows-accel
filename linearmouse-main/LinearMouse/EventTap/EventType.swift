@@ -48,6 +48,9 @@ struct PointerMotionRequirements: OptionSet {
     init(configuration: Configuration) {
         self = []
         for scheme in configuration.schemes {
+            if scheme.pointer.customAcceleration?.enabled == true {
+                formUnion(.all)
+            }
             if scheme.pointer.redirectsToScroll == true,
                scheme.pointer.redirectsToScrollTrigger == nil {
                 formUnion(.all)

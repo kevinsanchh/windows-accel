@@ -155,6 +155,17 @@ struct PointerSettings: View {
                         }
                     }
                 }
+                .disabled(state.customAccelerationEnabled)
+                .modifier(SectionViewModifier())
+
+                Section {
+                    CustomPointerAccelerationSettings(
+                        enabled: $state.customAccelerationEnabled,
+                        useWindowsAcceleration: $state.useWindowsAcceleration,
+                        sensitivity: $state.customSensitivity,
+                        displayDPI: $state.customDisplayDPI
+                    )
+                }
                 .modifier(SectionViewModifier())
 
                 Section {

@@ -18,6 +18,21 @@ extension Device: PointerSettingsTarget {}
 /// invalidates the snapshot, including when the next request returns to an older scheme.
 final class PointerSchemeApplicationState {
     private(set) var snapshot: Scheme?
+    private let readinessLock = NSLock()
+    private var customAccelerationReady = false
+
+    /// EventThread may transform only after the native 1:1 baseline succeeded.
+    var isCustomAccelerationReady: Bool {
+        readinessLock.lock()
+        defer { readinessLock.unlock() }
+        return customAccelerationReady
+    }
+
+    private func setCustomAccelerationReady(_ ready: Bool) {
+        readinessLock.lock()
+        customAccelerationReady = ready
+        readinessLock.unlock()
+    }
 
     @discardableResult
     func apply(_ scheme: Scheme, to target: PointerSettingsTarget) -> Bool {
@@ -28,6 +43,7 @@ final class PointerSchemeApplicationState {
             return false
         }
         snapshot = next
+        setCustomAccelerationReady(next.pointer.customAcceleration?.enabled == true)
         return true
     }
 
@@ -46,6 +62,7 @@ final class PointerSchemeApplicationState {
     }
 
     func invalidate() {
+        setCustomAccelerationReady(false)
         snapshot = nil
     }
 }
@@ -55,7 +72,21 @@ enum PointerSchemeApplier {
     static func apply(_ diff: SchemeDiff, to device: PointerSettingsTarget) -> Bool {
         let pointer = diff.current.pointer
         let disabled = pointer.disableAcceleration == true
-        let modeChanged = diff.changed(\.pointer.disableAcceleration)
+        let customEnabled = pointer.customAcceleration?.enabled == true
+        let customModeChanged = diff.previous == nil ||
+            (diff.previous?.pointer.customAcceleration?.enabled == true) != customEnabled
+        if customEnabled {
+            // Native linear tracking at 1 gives the transformer a 1:1 baseline.
+            // Legacy drivers use -1 to bypass both acceleration and sensitivity.
+            guard customModeChanged || diff.changed(\.pointer.disableAcceleration) ||
+                diff.changed(\.pointer.acceleration) || diff.changed(\.pointer.speed) else { return true }
+            if device.supportsLinearPointerScaling {
+                guard device.setDisablePointerAcceleration(true) else { return false }
+                return device.setPointerAcceleration(1)
+            }
+            return device.setPointerAcceleration(-1)
+        }
+        let modeChanged = diff.changed(\.pointer.disableAcceleration) || customModeChanged
         if device.supportsLinearPointerScaling, modeChanged {
             guard device.setDisablePointerAcceleration(disabled) else {
                 return false

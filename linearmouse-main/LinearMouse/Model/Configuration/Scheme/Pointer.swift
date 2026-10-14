@@ -47,6 +47,8 @@ extension Scheme {
 
         @Clamp<Speed> var speed: Unsettable<Decimal>?
 
+        var customAcceleration: CustomAcceleration?
+
         var hardwareDPI: Int?
 
         /// Match application conditions against the window under the pointer.
@@ -68,6 +70,11 @@ extension Scheme.Pointer {
 
         if let speed {
             pointer.speed = speed
+        }
+
+        if let customAcceleration {
+            if pointer.customAcceleration == nil { pointer.customAcceleration = .init() }
+            customAcceleration.merge(into: &pointer.customAcceleration!)
         }
 
         if let hardwareDPI {
@@ -114,5 +121,36 @@ extension Scheme.Trigger {
         }
 
         return buttonNumber != 0 || !modifierFlags.isEmpty
+    }
+}
+
+/// Simple controls over the documented ballistic curve. Its lookup points,
+/// counts-per-poll divisor, extrapolation and remainder rules are fixed.
+extension Scheme.Pointer {
+    struct CustomAcceleration: Codable, Equatable {
+        var enabled: Bool?
+        var useWindowsAcceleration: Bool?
+        var sensitivity: Double?
+        var displayDPI: Double?
+
+        var effectiveSensitivity: Double {
+            useWindowsAcceleration ?? true ? 10 : Self.valid(sensitivity, default: 10, range: 1 ... 20)
+        }
+
+        var effectiveDisplayDPI: Double {
+            useWindowsAcceleration ?? true ? 96 : Self.valid(displayDPI, default: 96, range: 48 ... 384)
+        }
+
+        private static func valid(_ value: Double?, default fallback: Double, range: ClosedRange<Double>) -> Double {
+            guard let value, value.isFinite else { return fallback }
+            return min(max(value, range.lowerBound), range.upperBound)
+        }
+
+        func merge(into other: inout Self) {
+            if let enabled { other.enabled = enabled }
+            if let useWindowsAcceleration { other.useWindowsAcceleration = useWindowsAcceleration }
+            if let sensitivity { other.sensitivity = sensitivity }
+            if let displayDPI { other.displayDPI = displayDPI }
+        }
     }
 }

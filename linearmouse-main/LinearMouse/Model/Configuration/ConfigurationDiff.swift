@@ -14,10 +14,12 @@ struct ConfigurationDiff {
             var result = Scheme(if: scheme.if)
             result.$scrolling = scheme.$scrolling
             result.$buttons = scheme.$buttons
+            result.pointer.customAcceleration = scheme.pointer.customAcceleration
             result.pointer.redirectsToScroll = scheme.pointer.redirectsToScroll
             result.pointer.redirectsToScrollTrigger = scheme.pointer.redirectsToScrollTrigger
             let hasSettings = scheme.scrolling != Scheme.Scrolling()
                 || scheme.buttons != Scheme.Buttons()
+                || scheme.pointer.customAcceleration != nil
                 || scheme.pointer.redirectsToScroll != nil
                 || scheme.pointer.redirectsToScrollTrigger != nil
             return hasSettings ? result : nil

@@ -1035,6 +1035,10 @@ class EventTransformerManager {
             eventTransformer.append(PointerRedirectsToScrollTransformer(redirect: redirectPointerToScroll))
         }
 
+        if let acceleration = scheme.pointer.customAcceleration, acceleration.enabled == true {
+            eventTransformer.append(WindowsPointerBallisticsTransformer(settings: acceleration))
+        }
+
         let route = TransformerRoute(transformer: eventTransformer)
         // Recognition can finish on a timer without another physical event.
         // Release its motion demand then as well, without retaining the route.

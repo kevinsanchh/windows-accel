@@ -384,6 +384,38 @@ extension PointerSettingsState {
         pointerRedirectsToScrollTrigger?.isValidRedirectsToScrollTrigger ?? true
     }
 
+    var customAccelerationEnabled: Bool {
+        get { mergedScheme.pointer.customAcceleration?.enabled ?? false }
+        set { editCustomAcceleration { $0.enabled = newValue } }
+    }
+
+    var useWindowsAcceleration: Bool {
+        get { mergedScheme.pointer.customAcceleration?.useWindowsAcceleration ?? true }
+        set { editCustomAcceleration { $0.useWindowsAcceleration = newValue } }
+    }
+
+    var customSensitivity: Double {
+        get { mergedScheme.pointer.customAcceleration?.sensitivity ?? 10 }
+        set {
+            guard newValue.isFinite else { return }
+            editCustomAcceleration { $0.sensitivity = min(max(newValue.rounded(), 1), 20) }
+        }
+    }
+
+    var customDisplayDPI: Double {
+        get { mergedScheme.pointer.customAcceleration?.displayDPI ?? 96 }
+        set {
+            guard newValue.isFinite else { return }
+            editCustomAcceleration { $0.displayDPI = min(max(newValue.rounded(), 48), 384) }
+        }
+    }
+
+    private func editCustomAcceleration(_ edit: (inout Scheme.Pointer.CustomAcceleration) -> Void) {
+        var value = scheme.pointer.customAcceleration ?? .init()
+        edit(&value)
+        scheme.pointer.customAcceleration = value
+    }
+
     var pointerAcceleration: Double {
         get {
             mergedScheme.pointer.acceleration?.unwrapped?.asTruncatedDouble

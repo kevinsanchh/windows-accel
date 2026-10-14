@@ -24,6 +24,21 @@ final class EventTransformerManagerTests: XCTestCase {
         SettingsState.shared.recordedButtonMappingEvent = nil
     }
 
+
+    func testCustomBallisticsToggleRebuildsRouteAndMotionDemand() throws {
+        var scheme = Scheme(pointer: .init(customAcceleration: .init(enabled: true)))
+        ConfigurationState.shared.configuration = .init(schemes: [scheme])
+        let manager = makeManager()
+        let enabled = try XCTUnwrap(manager.get(withDevice: nil, withPid: nil, withDisplay: nil) as? [EventTransformer])
+        XCTAssertTrue(enabled.contains { $0 is WindowsPointerBallisticsTransformer })
+        XCTAssertEqual(manager.pointerMotionRequirements, .all)
+        scheme.pointer.customAcceleration?.enabled = false
+        ConfigurationState.shared.configuration = .init(schemes: [scheme])
+        let disabled = try XCTUnwrap(manager.get(withDevice: nil, withPid: nil, withDisplay: nil) as? [EventTransformer])
+        XCTAssertFalse(disabled.contains { $0 is WindowsPointerBallisticsTransformer })
+        XCTAssertTrue(manager.pointerMotionRequirements.isEmpty)
+    }
+
     func testRightSwipeEnablesMotionOnlyForItsTriggerAndDisablesOnRelease() throws {
         for lockPointer in [false, true] {
             warpedPositions.removeAll()

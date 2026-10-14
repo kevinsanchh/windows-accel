@@ -30,6 +30,10 @@ class ScreenManager: ObservableObject {
         screenNameLock.withLock { focusDisplays.first { $0.bounds.contains(point) }?.name }
     }
 
+    var displayBoundsSnapshot: [CGRect] {
+        screenNameLock.withLock { focusDisplays.map(\.bounds) }
+    }
+
     private var _currentScreenNameSnapshot: String?
     var currentScreenNameSnapshot: String? {
         screenNameLock.withLock { _currentScreenNameSnapshot }

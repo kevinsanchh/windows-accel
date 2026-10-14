@@ -409,6 +409,21 @@ declare namespace Scheme {
 
   type Pointer = {
     /**
+     * @title Custom pointer acceleration
+     * @description Apply Windows pointer ballistics in logical screen points, overriding native acceleration and tracking speed.
+     */
+    customAcceleration?: {
+      /** @default false */
+      enabled?: boolean;
+      /** @description Use the exact Windows 10/11 default curve, sensitivity 10 and logical DPI 96, ignoring custom values. @default true */
+      useWindowsAcceleration?: boolean;
+      /** @description Windows EPP sensitivity, 10 corresponds to 6/11. @minimum 1 @maximum 20 @default 10 */
+      sensitivity?: number;
+      /** @description Windows logical display DPI, 96 corresponds to 100% scaling. @minimum 48 @maximum 384 @default 96 */
+      displayDPI?: number;
+    };
+
+    /**
      * @title Focus windows on hover
      * @description Focus the hovered window without an intentional hover delay or raising it. App conditions match the hovered window, not the frontmost app. Hold Control to pause. Some apps may raise themselves when focused.
      * @default false
