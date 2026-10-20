@@ -134,7 +134,12 @@ extension Scheme.Pointer {
         var displayDPI: Double?
 
         var effectiveSensitivity: Double {
-            useWindowsAcceleration ?? true ? 10 : Self.valid(sensitivity, default: 10, range: 1 ... 20)
+            Self.normalizedSensitivity(sensitivity)
+        }
+
+        static func normalizedSensitivity(_ value: Double?) -> Double {
+            let clamped = valid(value, default: 10, range: 1 ... 20)
+            return (clamped * 100).rounded() / 100
         }
 
         var effectiveDisplayDPI: Double {

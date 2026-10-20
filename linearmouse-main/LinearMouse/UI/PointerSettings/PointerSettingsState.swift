@@ -395,10 +395,10 @@ extension PointerSettingsState {
     }
 
     var customSensitivity: Double {
-        get { mergedScheme.pointer.customAcceleration?.sensitivity ?? 10 }
+        get { mergedScheme.pointer.customAcceleration?.effectiveSensitivity ?? 10 }
         set {
             guard newValue.isFinite else { return }
-            editCustomAcceleration { $0.sensitivity = min(max(newValue.rounded(), 1), 20) }
+            editCustomAcceleration { $0.sensitivity = Scheme.Pointer.CustomAcceleration.normalizedSensitivity(newValue) }
         }
     }
 
