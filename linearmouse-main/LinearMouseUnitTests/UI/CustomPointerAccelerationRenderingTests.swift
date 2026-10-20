@@ -6,6 +6,15 @@ import SwiftUI
 import XCTest
 
 final class CustomPointerAccelerationRenderingTests: XCTestCase {
+
+    func testSensitivityFormatterAcceptsAndDisplaysTwoDecimals() throws {
+        let formatter = CustomPointerAccelerationSettings.sensitivityFormatter
+        formatter.locale = Locale(identifier: "en_US_POSIX")
+        XCTAssertEqual(formatter.string(from: 10), "10.00")
+        XCTAssertEqual(formatter.string(from: 1.25), "1.25")
+        XCTAssertEqual(try XCTUnwrap(formatter.number(from: "12.34")).doubleValue, 12.34)
+    }
+
     @MainActor
     func testRenderDisabledWindowsAndCustomModes() throws {
         for (name, enabled, windows) in [("disabled", false, true), ("windows", true, true), ("custom", true, false)] {

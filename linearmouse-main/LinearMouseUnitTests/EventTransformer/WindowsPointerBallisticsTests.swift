@@ -22,11 +22,11 @@ final class WindowsPointerBallisticsTests: XCTestCase {
         XCTAssertEqual(engine.gain(for: 0), 0)
     }
 
-    func testWindowsPresetIgnoresAllCustomValues() {
+    func testWindowsPresetIgnoresDisplayDPIButAllowsFractionalSensitivity() {
         let custom = Scheme.Pointer.CustomAcceleration(enabled: true, useWindowsAcceleration: true,
-                                                        sensitivity: 20, displayDPI: 384)
+                                                        sensitivity: 12.34, displayDPI: 384)
         XCTAssertEqual(WindowsPointerBallistics(settings: custom).gain(for: 10),
-                       WindowsPointerBallistics().gain(for: 10))
+                       WindowsPointerBallistics().gain(for: 10) * 1.234, accuracy: 1e-12)
         let scaled = Scheme.Pointer.CustomAcceleration(useWindowsAcceleration: false, sensitivity: 20, displayDPI: 144)
         XCTAssertEqual(WindowsPointerBallistics(settings: scaled).gain(for: 10),
                        WindowsPointerBallistics().gain(for: 10) * 3, accuracy: 1e-12)
@@ -107,6 +107,15 @@ final class WindowsPointerBallisticsTests: XCTestCase {
         _ = transformer.transform(event, in: .init(device: nil))
         XCTAssertEqual(event.getIntegerValueField(.mouseEventDeltaX), 10)
         XCTAssertEqual(event.location, CGPoint(x: 110, y: 100))
+    }
+
+    func testSensitivityQuantizationBoundsAndDefault() {
+        XCTAssertEqual(Scheme.Pointer.CustomAcceleration.normalizedSensitivity(12.346), 12.35)
+        XCTAssertEqual(Scheme.Pointer.CustomAcceleration.normalizedSensitivity(12.344), 12.34)
+        XCTAssertEqual(Scheme.Pointer.CustomAcceleration.normalizedSensitivity(0), 1)
+        XCTAssertEqual(Scheme.Pointer.CustomAcceleration.normalizedSensitivity(100), 20)
+        XCTAssertEqual(Scheme.Pointer.CustomAcceleration.normalizedSensitivity(nil), 10)
+        XCTAssertEqual(Scheme.Pointer.CustomAcceleration.normalizedSensitivity(.nan), 10)
     }
 
 }
