@@ -3,10 +3,17 @@
 Open **Pointer → Custom pointer acceleration** and enable the section.
 **Use Windows acceleration** is enabled by default. It selects the Windows
 8–11 Enhance pointer precision curve at sensitivity 10 (Windows 6/11) and
-96 logical display DPI. It ignores the saved custom values.
+96 logical display DPI. The sensitivity slider applies in both modes and accepts
+values from 1.00 to 20.00 in hundredths. Its default is 10.00. Windows mode
+ignores the saved custom display DPI.
 
-Turn off **Use Windows acceleration** to edit sensitivity (1–20) and Windows
-logical display DPI (48–384) with sliders or numeric fields. DPI 96, 120 and
+Use the slider or numeric input to adjust sensitivity while **Use Windows
+acceleration** is on. Sensitivity scales all gains by sensitivity / 10 without
+changing the curve's input thresholds. Fractional sensitivity extends the
+Windows registry's integer settings using the same linear scaling formula.
+
+Turn off **Use Windows acceleration** to also edit Windows logical display DPI
+(48–384) with a slider or numeric field. DPI 96, 120 and
 144 correspond to Windows display scaling of 100%, 125% and 150%. These are
 Windows logical DPI values, not the mouse sensor's hardware DPI.
 

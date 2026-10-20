@@ -1484,14 +1484,14 @@
             },
             "sensitivity": {
               "default": 10,
-              "description": "Windows EPP sensitivity, 10 corresponds to 6/11.",
+              "description": "Windows EPP sensitivity in both modes, with two decimal places; 10 corresponds to 6/11.",
               "maximum": 20,
               "minimum": 1,
               "type": "number"
             },
             "useWindowsAcceleration": {
               "default": true,
-              "description": "Use the exact Windows 10/11 default curve, sensitivity 10 and logical DPI 96, ignoring custom values.",
+              "description": "Use the exact Windows 10/11 default curve and logical DPI 96, ignoring custom display DPI. Sensitivity applies in both modes.",
               "type": "boolean"
             }
           },

@@ -415,9 +415,9 @@ declare namespace Scheme {
     customAcceleration?: {
       /** @default false */
       enabled?: boolean;
-      /** @description Use the exact Windows 10/11 default curve, sensitivity 10 and logical DPI 96, ignoring custom values. @default true */
+      /** @description Use the exact Windows 10/11 default curve and logical DPI 96, ignoring custom display DPI. Sensitivity applies in both modes. @default true */
       useWindowsAcceleration?: boolean;
-      /** @description Windows EPP sensitivity, 10 corresponds to 6/11. @minimum 1 @maximum 20 @default 10 */
+      /** @description Windows EPP sensitivity in both modes, with two decimal places; 10 corresponds to 6/11. @minimum 1 @maximum 20 @default 10 */
       sensitivity?: number;
       /** @description Windows logical display DPI, 96 corresponds to 100% scaling. @minimum 48 @maximum 384 @default 96 */
       displayDPI?: number;
